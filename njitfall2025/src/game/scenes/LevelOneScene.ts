@@ -17,7 +17,7 @@ export class LevelOneScene extends Phaser.Scene {
     preload() {
         this.load.image('box', new URL('../assets/box.png', import.meta.url).href);
         this.load.atlas('shermie_sheet', new URL('../assets/atlas/BasicLR_Shermie_Sheet.png', import.meta.url).href, new URL('../assets/atlas/BasicLR_Shermie_Sheet.json', import.meta.url).href);
-        this.load.audio('level1_music', new URL('../assets/music/Firstlevel.mp3', import.meta.url).href);
+        this.load.audio('level1_music', new URL('../assets/music/Fristlevel.mp3', import.meta.url).href);
     }
 
     create() {
@@ -27,6 +27,8 @@ export class LevelOneScene extends Phaser.Scene {
         this.cameras.main.backgroundColor.setTo(128, 128, 128, 128)
         
         //start background music
+        this.sound.stopAll();
+
         this.backgroundMusic = this.sound.add('level1_music', { loop: true, volume: 0.5});
         this.backgroundMusic.play();
 

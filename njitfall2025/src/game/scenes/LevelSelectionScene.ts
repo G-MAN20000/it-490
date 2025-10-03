@@ -7,6 +7,7 @@ export class LevelSelectionScene extends Phaser.Scene {
     private backgroundMusic?: Phaser.Sound.BaseSound;
     private hoverSound?: Phaser.Sound.BaseSound;
     private clickSound?: Phaser.Sound.BaseSound;
+    private pendingUnlockHandler?: () => void;
 
     constructor() {
         super('LevelSelection');
@@ -20,25 +21,32 @@ export class LevelSelectionScene extends Phaser.Scene {
 
     create() {
         this.backgroundMusic = this.sound.add('level_selection_music', { loop: true, volume: 0.5 });
-        this.backgroundMusic.play();
+
+        if (this.sound.locked) {
+            this.pendingUnlockHandler = () => {
+                this.pendingUnlockHandler = undefined;
+                if (this.backgroundMusic && !this.backgroundMusic.isPlaying) {
+                    this.backgroundMusic.play();
+                }
+            };
+            this.sound.once(Phaser.Sound.Events.UNLOCKED, this.pendingUnlockHandler);
+        } else {
+            this.backgroundMusic.play();
+        }
 
         this.hoverSound = this.sound.add('button_hover');
         this.clickSound = this.sound.add('button_click');
 
         const mainMenuButton = new TexturedButton(this, this.scale.width / 2, this.scale.height / 2, 120, 40, 'Main Menu', null, TextStyles.BUTTON_TEXT);
 
-        mainMenuButton.backGround.on('pointerover', () => this.playHoverSound());
-        mainMenuButton.backGround.on('pointerdown', () => {
-            this.playClickSound();
+        this.registerButtonAudio(mainMenuButton, () => {
             this.scene.start('MainMenu');
             console.log('Switched to main menu');
         });
 
         const levelOneButton = new TexturedButton(this, this.scale.width / 2, this.scale.height / 2 + 41, 120, 40, 'Start Level 1', null, TextStyles.BUTTON_TEXT);
 
-        levelOneButton.backGround.on('pointerover', () => this.playHoverSound());
-        levelOneButton.backGround.on('pointerdown', () => {
-            this.playClickSound();
+        this.registerButtonAudio(levelOneButton, () => {
             this.scene.start('LevelOne');
             console.log('Switched to level One');
         });
@@ -50,13 +58,21 @@ export class LevelSelectionScene extends Phaser.Scene {
         this.add.existing(levelOneButton);
     }
 
+    private registerButtonAudio(button: TexturedButton, onClick: () => void) {
+        button.backGround.on('pointerover', () => this.playHoverSound());
+        button.backGround.on('pointerdown', () => {
+            this.playClickSound();
+            onClick();
+        });
+    }
+
     private playHoverSound() {
         if (!this.hoverSound) {
             return;
         }
 
         this.hoverSound.stop();
-        this.hoverSound.play();
+        this.hoverSound.play({ seek: 0 });
     }
 
     private playClickSound() {
@@ -65,10 +81,15 @@ export class LevelSelectionScene extends Phaser.Scene {
         }
 
         this.clickSound.stop();
-        this.clickSound.play();
+        this.clickSound.play({ seek: 0 });
     }
 
     private cleanupAudio() {
+        if (this.pendingUnlockHandler) {
+            this.sound.off(Phaser.Sound.Events.UNLOCKED, this.pendingUnlockHandler);
+            this.pendingUnlockHandler = undefined;
+        }
+
         if (this.backgroundMusic) {
             this.backgroundMusic.stop();
             this.backgroundMusic.destroy();

@@ -12,6 +12,7 @@ export class LevelOneScene extends Phaser.Scene {
 
     preload() {
         this.load.image('box', new URL('../assets/box.png', import.meta.url).href);
+        this.load.image('first_level_bg', new URL('../assets/first_level.png', import.meta.url).href);
         this.load.atlas('shermie_sheet', new URL('../assets/atlas/BasicLR_Shermie_Sheet.png', import.meta.url).href, new URL('../assets/atlas/BasicLR_Shermie_Sheet.json', import.meta.url).href);
         this.load.audio('level1_music', new URL('../assets/music/Mainmenuv2.mp3', import.meta.url).href);
     }
@@ -19,7 +20,9 @@ export class LevelOneScene extends Phaser.Scene {
     create() {
         const W = this.scale.width;
         const H = this.scale.height;
-        
+
+        this.add.image(W / 2, H / 2, 'first_level_bg').setDisplaySize(W, H).setDepth(-50);
+
         this.cameras.main.backgroundColor.setTo(128, 128, 128, 128)
         
         //start background music
@@ -31,13 +34,35 @@ export class LevelOneScene extends Phaser.Scene {
         this.cameras.main.setBounds(0, 0, W, H);
         this.cameras.main.setRoundPixels(true); // prevents subpixel flicker
 
-        // Walls / platforms
+        // Walls / platforms shaped after the level art
         this.walls = this.physics.add.staticGroup();
-        // Floor
-        this.walls.create(W / 2, H - 25, 'box').setScale(Math.max(W / 160, 5), 0.5).refreshBody();
-        // Sides
-        this.walls.create(25, H / 2, 'box').setScale(0.5, Math.max(H / 100, 6)).refreshBody();
-        this.walls.create(W - 25, H / 2, 'box').setScale(0.5, Math.max(H / 100, 6)).refreshBody();
+
+        const createPlatform = (x: number, y: number, width: number, height: number) => {
+            const platform = this.walls.get(x, y, 'box') as Phaser.Physics.Arcade.Image;
+            platform.setActive(true);
+            platform.setVisible(false);
+            platform.setDisplaySize(width, height);
+            platform.refreshBody();
+            return platform;
+        };
+
+        // Top-left ground near the barn (no collider for the barn itself)
+        createPlatform(260, 250, 520, 60);
+
+        // Right-hand ledge exiting the upper cavern
+        createPlatform(760, 320, 280, 50);
+
+        // Central mid-level walkway
+        createPlatform(520, 430, 780, 55);
+
+        // Support lip that keeps Shermies from falling into the void below the mid level
+        createPlatform(900, 505, 180, 50);
+
+        // Lower ground path leading to the doorway
+        createPlatform(520, 640, 860, 70);
+
+        // Small landing immediately in front of the door for reliable spawning
+        createPlatform(790, 600, 200, 40);
 
         // Global gravity
         this.physics.world.gravity.y = 900;
@@ -50,6 +75,10 @@ export class LevelOneScene extends Phaser.Scene {
         });
 
         // Spawn one every 3 seconds until there are 10
+        const doorSpawnY = 560;
+        const doorSpawnXs = [760, 790, 820, 850];
+        let spawnIndex = 0;
+
         this.spawnTimer = this.time.addEvent({
             delay: 3000,
             loop: true,
@@ -60,11 +89,10 @@ export class LevelOneScene extends Phaser.Scene {
                     return;
                 }
 
-                const marginX = 50;
-                const x = Phaser.Math.Between(marginX, W - marginX);
-                const y = Phaser.Math.Between(60, 100); // near top so gravity drops them
+                const x = doorSpawnXs[spawnIndex % doorSpawnXs.length];
+                spawnIndex += 1;
 
-                this.spawnShermingExplicit(x, y);
+                this.spawnShermingExplicit(x, doorSpawnY);
             }
         });
 

@@ -3,12 +3,28 @@ import { TextStyles } from '../objects/ui/TextStyles.ts';
 import Phaser from 'phaser';
 
 export class LevelSelectionScene extends Phaser.Scene {
+    private backgroundMusic?: Phaser.Sound.BaseSound;
 
     constructor() {
         super('LevelSelection');
     }
 
+    preload() {
+        if (!this.cache.audio.exists('level1_music')) {
+            this.load.audio('level1_music', new URL('../assets/music/Mainmenuv2.mp3', import.meta.url).href);
+        }
+    }
+
     create() {
+        this.backgroundMusic = this.sound.add('level1_music', { loop: true, volume: 0.5 });
+        this.backgroundMusic.play();
+
+        this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+            this.backgroundMusic?.stop();
+            this.backgroundMusic?.destroy();
+            this.backgroundMusic = undefined;
+        });
+
         const mainMenuButton = new TexturedButton(this, this.scale.width / 2, this.scale.height / 2, 120, 40, 'Main Menu', null, TextStyles.BUTTON_TEXT);
 
         mainMenuButton.backGround.on('pointerdown', () => {

@@ -5,10 +5,6 @@ export class LevelOneScene extends Phaser.Scene {
     private walls!: Phaser.Physics.Arcade.StaticGroup;
     private spawnTimer?: Phaser.Time.TimerEvent;
     private backgroundMusic?: Phaser.Sound.BaseSound;
-    private volumeSlider?: HTMLInputElement;
-    private volumeSliderContainer?: HTMLDivElement;
-    private boundVolumeChange?: (event: Event) => void;
-
 
     constructor() {
         super('LevelOne');
@@ -17,7 +13,7 @@ export class LevelOneScene extends Phaser.Scene {
     preload() {
         this.load.image('box', new URL('../assets/box.png', import.meta.url).href);
         this.load.atlas('shermie_sheet', new URL('../assets/atlas/BasicLR_Shermie_Sheet.png', import.meta.url).href, new URL('../assets/atlas/BasicLR_Shermie_Sheet.json', import.meta.url).href);
-        this.load.audio('level1_music', new URL('../assets/music/Firstlevel.mp3', import.meta.url).href);
+        this.load.audio('level1_music', new URL('../assets/music/Fristlevel.mp3', import.meta.url).href);
     }
 
     create() {
@@ -27,10 +23,10 @@ export class LevelOneScene extends Phaser.Scene {
         this.cameras.main.backgroundColor.setTo(128, 128, 128, 128)
         
         //start background music
+        this.sound.stopAll();
+
         this.backgroundMusic = this.sound.add('level1_music', { loop: true, volume: 0.5});
         this.backgroundMusic.play();
-
-        this.setupVolumeControls();
     
         // Keep the world == camera so nothing “walks off-camera”
         this.physics.world.setBounds(0, 0, W, H);
@@ -80,8 +76,6 @@ export class LevelOneScene extends Phaser.Scene {
                 this.backgroundMusic.destroy();
                 this.backgroundMusic = undefined;
             }
-
-            this.cleanupVolumeControls();
         };
 
         this.events.on(Phaser.Scenes.Events.SHUTDOWN, () => {
@@ -132,83 +126,6 @@ export class LevelOneScene extends Phaser.Scene {
         });
     }
 
-    private setupVolumeControls() {
-        const container = document.getElementById('game-container');
-        if (!container || this.volumeSliderContainer) {
-            return;
-        }
-
-        const wrapper = document.createElement('div');
-        wrapper.style.position = 'absolute';
-        wrapper.style.top = '16px';
-        wrapper.style.right = '16px';
-        wrapper.style.padding = '8px 12px';
-        wrapper.style.background = 'rgba(0, 0, 0, 0.6)';
-        wrapper.style.borderRadius = '8px';
-        wrapper.style.display = 'flex';
-        wrapper.style.flexDirection = 'column';
-        wrapper.style.gap = '6px';
-        wrapper.style.zIndex = '10';
-        wrapper.style.color = '#ffffff';
-        wrapper.style.fontFamily = 'Arial, Helvetica, sans-serif';
-        wrapper.style.pointerEvents = 'auto';
-
-        const label = document.createElement('label');
-        label.textContent = 'Volume';
-        label.style.fontSize = '14px';
-
-        const slider = document.createElement('input');
-        const sliderId = 'level-one-volume-slider';
-        slider.id = sliderId;
-        slider.type = 'range';
-        slider.min = '0';
-        slider.max = '100';
-        slider.step = '1';
-        slider.style.width = '160px';
-
-        label.htmlFor = sliderId;
-
-        const initialVolume = this.backgroundMusic ? this.backgroundMusic.volume : 0.5;
-        slider.value = String(Math.round(initialVolume * 100));
-
-        const handler = (event: Event) => {
-            const target = event.target as HTMLInputElement | null;
-            if (!target) {
-                return;
-            }
-
-            const value = Number.parseInt(target.value, 10);
-            const normalized = Phaser.Math.Clamp(value / 100, 0, 1);
-
-            if (this.backgroundMusic) {
-                this.backgroundMusic.setVolume(normalized);
-            }
-        };
-
-        slider.addEventListener('input', handler);
-
-        wrapper.appendChild(label);
-        wrapper.appendChild(slider);
-        container.appendChild(wrapper);
-
-        this.boundVolumeChange = handler;
-        this.volumeSlider = slider;
-        this.volumeSliderContainer = wrapper;
-    }
-
-    private cleanupVolumeControls() {
-        if (this.volumeSlider && this.boundVolumeChange) {
-            this.volumeSlider.removeEventListener('input', this.boundVolumeChange);
-        }
-
-        if (this.volumeSliderContainer && this.volumeSliderContainer.parentElement) {
-            this.volumeSliderContainer.parentElement.removeChild(this.volumeSliderContainer);
-        }
-
-        this.volumeSlider = undefined;
-        this.volumeSliderContainer = undefined;
-        this.boundVolumeChange = undefined;
-    }
 
     /**
      * Create a NEW Shermings (no group.get reuse), add it, wire physics, and keep it in front.

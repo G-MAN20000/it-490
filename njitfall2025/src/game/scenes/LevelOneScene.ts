@@ -4,6 +4,7 @@ export class LevelOneScene extends Phaser.Scene {
     private shermingsGroup!: Phaser.Physics.Arcade.Group;
     private walls!: Phaser.Physics.Arcade.StaticGroup;
     private spawnTimer?: Phaser.Time.TimerEvent;
+    private backgroundMusic?: Phaser.Sound.BaseSound;
 
 
     constructor() {
@@ -68,13 +69,20 @@ export class LevelOneScene extends Phaser.Scene {
             }
         });
 
+        const stopMusic = () => {
+            if (this.backgroundMusic) {
+                this.backgroundMusic.stop();
+                this.backgroundMusic.destroy();
+                this.backgroundMusic = undefined;
+            }
+        };
+
         this.events.on(Phaser.Scenes.Events.SHUTDOWN, () => {
             this.spawnTimer?.remove(false);
-            //STOP music when scene shuts down 
-            if  (this.backgroundMusic) {
-                this.backgroundMusic.stop();
-            }
+            stopMusic();
         });
+
+        this.events.once(Phaser.Scenes.Events.DESTROY, stopMusic);
 
         if (!this.anims.exists('sherming_walk_right')) {
             this.anims.create({

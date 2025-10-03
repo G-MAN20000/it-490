@@ -17,7 +17,7 @@ export class LevelOneScene extends Phaser.Scene {
     preload() {
         this.load.image('box', new URL('../assets/box.png', import.meta.url).href);
         this.load.atlas('shermie_sheet', new URL('../assets/atlas/BasicLR_Shermie_Sheet.png', import.meta.url).href, new URL('../assets/atlas/BasicLR_Shermie_Sheet.json', import.meta.url).href);
-        this.load.audio('level1_music', new URL('../assets/music/Mainmenuv2.mp3', import.meta.url).href);
+        this.load.audio('level1_music', new URL('../assets/music/Firstlevel.mp3', import.meta.url).href);
     }
 
     create() {

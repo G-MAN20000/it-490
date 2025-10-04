@@ -4,6 +4,7 @@ export class LevelOneScene extends Phaser.Scene {
     private shermingsGroup!: Phaser.Physics.Arcade.Group;
     private walls!: Phaser.Physics.Arcade.StaticGroup;
     private spawnTimer?: Phaser.Time.TimerEvent;
+    private backgroundMusic?: Phaser.Sound.BaseSound;
 
 
     constructor() {
@@ -12,6 +13,7 @@ export class LevelOneScene extends Phaser.Scene {
 
     preload() {
         this.load.image('box', new URL('../assets/box.png', import.meta.url).href);
+        this.load.image('level1_background', new URL('../assets/frist_level.png', import.meta.url).href);
         this.load.atlas('shermie_sheet', new URL('../assets/atlas/BasicLR_Shermie_Sheet.png', import.meta.url).href, new URL('../assets/atlas/BasicLR_Shermie_Sheet.json', import.meta.url).href);
         this.load.audio('level1_music', new URL('../assets/music/Mainmenuv2.mp3', import.meta.url).href);
     }
@@ -19,9 +21,11 @@ export class LevelOneScene extends Phaser.Scene {
     create() {
         const W = this.scale.width;
         const H = this.scale.height;
-        
-        this.cameras.main.backgroundColor.setTo(128, 128, 128, 128)
-        
+
+        const background = this.add.image(0, 0, 'level1_background').setOrigin(0, 0);
+        background.setDisplaySize(W, H);
+        background.setDepth(-10);
+
         //start background music
         this.backgroundMusic = this.sound.add('level1_music', { loop: true, volume: 0.5});
         this.backgroundMusic.play();
@@ -33,11 +37,60 @@ export class LevelOneScene extends Phaser.Scene {
 
         // Walls / platforms
         this.walls = this.physics.add.staticGroup();
-        // Floor
-        this.walls.create(W / 2, H - 25, 'box').setScale(Math.max(W / 160, 5), 0.5).refreshBody();
-        // Sides
-        this.walls.create(25, H / 2, 'box').setScale(0.5, Math.max(H / 100, 6)).refreshBody();
-        this.walls.create(W - 25, H / 2, 'box').setScale(0.5, Math.max(H / 100, 6)).refreshBody();
+
+        const BASE_WIDTH = 800;
+        const BASE_HEIGHT = 450;
+        const defaultThickness = Math.max(H * 0.04, 16);
+
+        const createStaticRect = (centerX: number, centerY: number, width: number, height: number) => {
+            const rect = this.walls.create(centerX, centerY, 'box');
+            rect.setDisplaySize(width, height);
+            rect.refreshBody();
+            rect.setVisible(false);
+            rect.setActive(true);
+            return rect;
+        };
+
+        const createPlatform = (startPx: number, endPx: number, surfaceYPx: number, thicknessPx = defaultThickness) => {
+            if (endPx <= startPx) return;
+            const width = ((endPx - startPx) / BASE_WIDTH) * W;
+            if (width <= 0) return;
+            const centerX = ((startPx + endPx) * 0.5 / BASE_WIDTH) * W;
+            const thickness = Math.max(thicknessPx, Math.max(H * 0.02, 12));
+            const topY = (surfaceYPx / BASE_HEIGHT) * H;
+            const centerY = topY + thickness * 0.5;
+            createStaticRect(centerX, centerY, width, thickness);
+        };
+
+        const platformSegments = [
+            { start: 1, end: 39, surfaceY: 217 },
+            { start: 54, end: 79, surfaceY: 217 },
+            { start: 107, end: 119, surfaceY: 411 },
+            { start: 120, end: 159, surfaceY: 359 },
+            { start: 160, end: 199, surfaceY: 89, thickness: defaultThickness * 0.8 },
+            { start: 240, end: 266, surfaceY: 359 },
+            { start: 267, end: 279, surfaceY: 217 },
+            { start: 280, end: 319, surfaceY: 411 },
+            { start: 320, end: 372, surfaceY: 359 },
+            { start: 400, end: 426, surfaceY: 411 },
+            { start: 427, end: 479, surfaceY: 217 },
+            { start: 480, end: 532, surfaceY: 411 },
+            { start: 533, end: 585, surfaceY: 217 },
+            { start: 600, end: 639, surfaceY: 411 },
+            { start: 640, end: 692, surfaceY: 217 },
+            { start: 693, end: 745, surfaceY: 359 },
+            { start: 746, end: 759, surfaceY: 269 },
+            { start: 760, end: 799, surfaceY: 217 },
+        ];
+
+        for (const segment of platformSegments) {
+            createPlatform(segment.start, segment.end, segment.surfaceY, segment.thickness ?? defaultThickness);
+        }
+
+        // Keep the left/right walls so Shermings can't leave the scene
+        const wallWidth = Math.max(W * 0.02, 24);
+        createStaticRect(wallWidth * 0.5, H * 0.5, wallWidth, H);
+        createStaticRect(W - wallWidth * 0.5, H * 0.5, wallWidth, H);
 
         // Global gravity
         this.physics.world.gravity.y = 900;

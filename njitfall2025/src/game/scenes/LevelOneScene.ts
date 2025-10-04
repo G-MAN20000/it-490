@@ -1,4 +1,5 @@
 import { Shermings } from '../objects/entities/Shermings.ts';
+import level1BackgroundUrl from '../assets/level1.png';
 
 export class LevelOneScene extends Phaser.Scene {
     private shermingsGroup!: Phaser.Physics.Arcade.Group;
@@ -12,8 +13,12 @@ export class LevelOneScene extends Phaser.Scene {
     }
 
     preload() {
-        this.load.image('box', new URL('../assets/box.png', import.meta.url).href);
-        this.load.image('level1_background', new URL('../assets/level1.png', import.meta.url).href);
+        if (!this.textures.exists('box')) {
+            this.load.image('box', new URL('../assets/box.png', import.meta.url).href);
+        }
+        if (!this.textures.exists('level1_background')) {
+            this.load.image('level1_background', level1BackgroundUrl);
+        }
         this.load.atlas('shermie_sheet', new URL('../assets/atlas/BasicLR_Shermie_Sheet.png', import.meta.url).href, new URL('../assets/atlas/BasicLR_Shermie_Sheet.json', import.meta.url).href);
         this.load.audio('level1_music', new URL('../assets/music/Mainmenuv2.mp3', import.meta.url).href);
     }
@@ -25,6 +30,7 @@ export class LevelOneScene extends Phaser.Scene {
         const background = this.add.image(0, 0, 'level1_background').setOrigin(0, 0);
         background.setDisplaySize(W, H);
         background.setDepth(-10);
+        background.setScrollFactor(0);
 
         //start background music
         this.backgroundMusic = this.sound.add('level1_music', { loop: true, volume: 0.5});
@@ -47,6 +53,7 @@ export class LevelOneScene extends Phaser.Scene {
             rect.setDisplaySize(width, height);
             rect.refreshBody();
             rect.setVisible(false);
+            rect.setAlpha(0);
             rect.setActive(true);
             return rect;
         };

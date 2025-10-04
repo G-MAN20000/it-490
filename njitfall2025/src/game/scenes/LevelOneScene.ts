@@ -1,3 +1,5 @@
+import boxTextureUrl from '../assets/box.png';
+import levelOneBackgroundUrl from '../assets/level1.png';
 import { Shermings } from '../objects/entities/Shermings.ts';
 
 export class LevelOneScene extends Phaser.Scene {
@@ -13,10 +15,10 @@ export class LevelOneScene extends Phaser.Scene {
 
     preload() {
         if (!this.textures.exists('box')) {
-            this.load.image('box', new URL('../assets/box.png', import.meta.url).href);
+            this.load.image('box', boxTextureUrl);
         }
         if (!this.textures.exists('level1_background')) {
-            this.load.image('level1_background', new URL('../assets/level1.png', import.meta.url).href);
+            this.load.image('level1_background', levelOneBackgroundUrl);
         }
         this.load.atlas('shermie_sheet', new URL('../assets/atlas/BasicLR_Shermie_Sheet.png', import.meta.url).href, new URL('../assets/atlas/BasicLR_Shermie_Sheet.json', import.meta.url).href);
         this.load.audio('level1_music', new URL('../assets/music/Mainmenuv2.mp3', import.meta.url).href);

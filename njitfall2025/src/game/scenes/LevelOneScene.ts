@@ -26,6 +26,8 @@ export class LevelOneScene extends Phaser.Scene {
   // invisible map-edge barriers
   private edgeBarriers!: Phaser.Physics.Arcade.StaticGroup;
 
+  private backgroundMusic?: Phaser.Sound.BaseSound;
+
   constructor() {
     super('LevelOne');
   }
@@ -36,12 +38,16 @@ export class LevelOneScene extends Phaser.Scene {
     this.load.image('testTile', new URL('../assets/tilemaps/test.png', import.meta.url).href);
     this.load.image('box', new URL('../assets/box.png', import.meta.url).href);
 
-   
+
     this.load.atlas(
       'shermie_sheet',
       new URL('../assets/atlas/BasicLR_Shermie_Sheet.png', import.meta.url).href,
       new URL('../assets/atlas/BasicLR_Shermie_Sheet.json', import.meta.url).href,
     );
+
+    if (!this.cache.audio.exists('level_one_music')) {
+      this.load.audio('level_one_music', new URL('../assets/music/Firstlevel.mp3', import.meta.url).href);
+    }
   }
 
   create() {
@@ -104,6 +110,27 @@ export class LevelOneScene extends Phaser.Scene {
     this.scene.launch('HUD', { time: 120, score: 0, remaining: this.totalToSpawn, needed: this.requiredToPass });
     this.hud = this.scene.get('HUD') as HUDScene;
     this.updateHud();
+
+    this.backgroundMusic = this.sound.add('level_one_music', { loop: true, volume: 0.5 });
+
+    const playMusic = () => {
+      if (!this.backgroundMusic?.isPlaying) {
+        this.backgroundMusic?.play();
+      }
+    };
+
+    if (this.sound.locked) {
+      this.sound.once(Phaser.Sound.Events.UNLOCKED, playMusic);
+    } else {
+      playMusic();
+    }
+
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.sound.off(Phaser.Sound.Events.UNLOCKED, playMusic);
+      this.backgroundMusic?.stop();
+      this.backgroundMusic?.destroy();
+      this.backgroundMusic = undefined;
+    });
   }
 
   update() {

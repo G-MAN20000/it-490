@@ -17,9 +17,20 @@ export class LevelSelectionScene extends Phaser.Scene {
 
     create() {
         this.backgroundMusic = this.sound.add('menu_music', { loop: true, volume: 0.5 });
-        this.backgroundMusic.play();
+        const playMusic = () => {
+            if (!this.backgroundMusic?.isPlaying) {
+                this.backgroundMusic?.play();
+            }
+        };
+
+        if (this.sound.locked) {
+            this.sound.once(Phaser.Sound.Events.UNLOCKED, playMusic);
+        } else {
+            playMusic();
+        }
 
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+            this.sound.off(Phaser.Sound.Events.UNLOCKED, playMusic);
             this.backgroundMusic?.stop();
             this.backgroundMusic?.destroy();
             this.backgroundMusic = undefined;

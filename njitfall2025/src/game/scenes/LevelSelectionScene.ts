@@ -23,14 +23,25 @@ export class LevelSelectionScene extends Phaser.Scene {
             }
         };
 
-        if (this.sound.locked) {
-            this.sound.once(Phaser.Sound.Events.UNLOCKED, playMusic);
+        const soundManager = this.sound;
+        const unlockedEvent = Phaser.Sound?.Events?.UNLOCKED ?? 'unlocked';
+
+        if (soundManager.locked) {
+            if (typeof soundManager.once === 'function') {
+                soundManager.once(unlockedEvent, playMusic);
+            } else {
+                this.events.once(Phaser.Scenes.Events.POST_UPDATE, playMusic);
+            }
         } else {
             playMusic();
         }
 
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-            this.sound.off(Phaser.Sound.Events.UNLOCKED, playMusic);
+            if (typeof soundManager.off === 'function') {
+                soundManager.off(unlockedEvent, playMusic);
+            } else if (typeof (soundManager as Phaser.Events.EventEmitter).removeListener === 'function') {
+                (soundManager as Phaser.Events.EventEmitter).removeListener(unlockedEvent, playMusic);
+            }
             this.backgroundMusic?.stop();
             this.backgroundMusic?.destroy();
             this.backgroundMusic = undefined;

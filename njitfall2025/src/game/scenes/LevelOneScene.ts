@@ -111,11 +111,11 @@ export class LevelOneScene extends Phaser.Scene {
     this.hud = this.scene.get('HUD') as HUDScene;
     this.updateHud();
 
-    this.backgroundMusic = this.sound.add('level_one_music');
+    this.backgroundMusic = this.sound.add('level_one_music', { loop: true, volume: 0.5 });
 
     const playMusic = () => {
       if (!this.backgroundMusic?.isPlaying) {
-        this.backgroundMusic?.play({ loop: true, volume: 0.5 });
+        this.backgroundMusic?.play();
       }
     };
 

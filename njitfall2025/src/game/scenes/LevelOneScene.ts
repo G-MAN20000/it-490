@@ -109,45 +109,36 @@ export class LevelOneScene extends Phaser.Scene {
     this.hud = this.scene.get('HUD') as HUDScene;
     this.updateHud();
     
-    //MUSIC
-    this.backgroundMusic = this.sound.add('level_one_music', { loop: true, volume: 0.5 });
-    this.backgroundMusic.play();
+    const soundManager = this.sound;
+    const unlockedEvent = Phaser.Sound?.Events?.UNLOCKED ?? 'unlocked';
 
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.backgroundMusic?.stop();
-    });
+    const playMusic = () => {
+      if (!this.backgroundMusic) {
+        this.backgroundMusic = soundManager.add('level_one_music');
+      }
 
-////////////////////MIGHT WORK 
-   this.backgroundMusic = this.sound.add('level_one_music', { loop: true, volume: 0.5 });
-           const playMusic = () => {
-               if (!this.backgroundMusic?.isPlaying) {
-                   this.backgroundMusic?.play();
-               }
-           };
-   
-           const soundManager = this.sound;
-           const unlockedEvent = Phaser.Sound?.Events?.UNLOCKED ?? 'unlocked';
-   
-           if (soundManager.locked) {
-               if (typeof soundManager.once === 'function') {
-                   soundManager.once(unlockedEvent, playMusic);
-               } else {
-                   this.events.once(Phaser.Scenes.Events.POST_UPDATE, playMusic);
-               }
-           } else {
-               playMusic();
-           }
-   
-           this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-               if (typeof soundManager.off === 'function') {
-                   soundManager.off(unlockedEvent, playMusic);
-               } else if (typeof (soundManager as Phaser.Events.EventEmitter).removeListener === 'function') {
-                   (soundManager as Phaser.Events.EventEmitter).removeListener(unlockedEvent, playMusic);
-               }
-               this.backgroundMusic?.stop();
-               this.backgroundMusic?.destroy();
-               this.backgroundMusic = undefined;
-               });
+      if (!this.backgroundMusic.isPlaying) {
+        this.backgroundMusic.play({ loop: true, volume: 0.5 });
+      }
+    };
+
+    if (soundManager.locked) {
+      soundManager.once(unlockedEvent, playMusic);
+    } else {
+      playMusic();
+    }
+
+    const cleanup = () => {
+      soundManager.off(unlockedEvent, playMusic);
+      if (this.backgroundMusic) {
+        this.backgroundMusic.stop();
+        this.backgroundMusic.destroy();
+        this.backgroundMusic = undefined;
+      }
+    };
+
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, cleanup);
+    this.events.once(Phaser.Scenes.Events.DESTROY, cleanup);
 
   }
 ////////

@@ -1,6 +1,7 @@
 import { TexturedButton } from '../objects/ui/TexturedButton.ts';
 import { TextStyles } from '../objects/ui/TextStyles.ts';
 import Phaser from 'phaser';
+import { playBackgroundMusic } from '../util/audio.ts';
 
 export class LevelSelectionScene extends Phaser.Scene {
     private backgroundMusic?: Phaser.Sound.BaseSound;
@@ -16,34 +17,9 @@ export class LevelSelectionScene extends Phaser.Scene {
     }
 
     create() {
-        this.backgroundMusic = this.sound.add('menu_music', { loop: true, volume: 0.5 });
-        const playMusic = () => {
-            if (!this.backgroundMusic?.isPlaying) {
-                this.backgroundMusic?.play();
-            }
-        };
-
-        const soundManager = this.sound;
-        const unlockedEvent = Phaser.Sound?.Events?.UNLOCKED ?? 'unlocked';
-
-        if (soundManager.locked) {
-            if (typeof soundManager.once === 'function') {
-                soundManager.once(unlockedEvent, playMusic);
-            } else {
-                this.events.once(Phaser.Scenes.Events.POST_UPDATE, playMusic);
-            }
-        } else {
-            playMusic();
-        }
+        this.backgroundMusic = playBackgroundMusic(this, 'menu_music', { loop: true, volume: 0.5 });
 
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-            if (typeof soundManager.off === 'function') {
-                soundManager.off(unlockedEvent, playMusic);
-            } else if (typeof (soundManager as Phaser.Events.EventEmitter).removeListener === 'function') {
-                (soundManager as Phaser.Events.EventEmitter).removeListener(unlockedEvent, playMusic);
-            }
-            this.backgroundMusic?.stop();
-            this.backgroundMusic?.destroy();
             this.backgroundMusic = undefined;
         });
 

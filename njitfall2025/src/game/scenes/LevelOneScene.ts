@@ -45,9 +45,7 @@ export class LevelOneScene extends Phaser.Scene {
       new URL('../assets/atlas/BasicLR_Shermie_Sheet.json', import.meta.url).href,
     );
 
-    if (!this.cache.audio.exists('level_one_music')) {
-      this.load.audio('level_one_music', new URL('../assets/music/Firstlevel.mp3', import.meta.url).href);
-    }
+    this.load.audio('level_one_music', new URL('../assets/music/Firstlevel.mp3', import.meta.url).href);
   }
 
   create() {
@@ -112,35 +110,10 @@ export class LevelOneScene extends Phaser.Scene {
     this.updateHud();
 
     this.backgroundMusic = this.sound.add('level_one_music', { loop: true, volume: 0.5 });
-
-    const playMusic = () => {
-      if (!this.backgroundMusic?.isPlaying) {
-        this.backgroundMusic?.play();
-      }
-    };
-
-    const soundManager = this.sound;
-    const unlockedEvent = Phaser.Sound?.Events?.UNLOCKED ?? 'unlocked';
-
-    if (soundManager.locked) {
-      if (typeof soundManager.once === 'function') {
-        soundManager.once(unlockedEvent, playMusic);
-      } else {
-        this.events.once(Phaser.Scenes.Events.POST_UPDATE, playMusic);
-      }
-    } else {
-      playMusic();
-    }
+    this.backgroundMusic.play();
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      if (typeof soundManager.off === 'function') {
-        soundManager.off(unlockedEvent, playMusic);
-      } else if (typeof (soundManager as Phaser.Events.EventEmitter).removeListener === 'function') {
-        (soundManager as Phaser.Events.EventEmitter).removeListener(unlockedEvent, playMusic);
-      }
       this.backgroundMusic?.stop();
-      this.backgroundMusic?.destroy();
-      this.backgroundMusic = undefined;
     });
   }
 
